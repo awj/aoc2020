@@ -1,4 +1,6 @@
-mod day1;
+// mod day1;
+mod day2;
+use day2::PWLine;
 
 use std::env;
 use std::fs;
@@ -9,12 +11,10 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        // Have to .collect() here to get a vector out of the Map.
-        let input:Vec<i32> = contents.lines().map(|x| x.parse::<i32>().unwrap()).collect();
-        match day1::find_triple_with_total(&input) {
-            Some((x,y, z)) => println!("Result {}", x * y * z),
-            None => println!("No pairs")
-        }
-    }
+        let input = contents.lines().map(|x| PWLine::parse(x).unwrap() );
 
+        let num_valid = input.filter(|p| p.valid()).count();
+
+        println!("num_valid: {}", num_valid);
+    }
 }
