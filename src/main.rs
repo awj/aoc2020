@@ -1,6 +1,5 @@
 // mod day1;
-mod day2;
-use day2::PWLine;
+mod day3;
 
 use std::env;
 use std::fs;
@@ -11,10 +10,8 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        let input = contents.lines().map(|x| PWLine::parse(x).unwrap() );
+        let forest = day3::Forest::parse(contents.lines());
 
-        let num_valid = input.filter(|p| p.valid()).count();
-
-        println!("num_valid: {}", num_valid);
+        println!("trees: {}", forest.trees_along((3, 1)));
     }
 }
