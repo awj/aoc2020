@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 // mod day1;
 mod day3;
 
@@ -10,8 +12,11 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
+        let slopes = [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
         let forest = day3::Forest::parse(contents.lines());
 
-        println!("trees: {}", forest.trees_along((3, 1)));
+        let total_trees: i64 = slopes.iter().map(|slope| i64::try_from(forest.trees_along(*slope)).unwrap()).product();
+
+        println!("trees: {}", total_trees);
     }
 }
