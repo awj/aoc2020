@@ -15,7 +15,12 @@ fn main() {
         let slopes = [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
         let forest = day3::Forest::parse(contents.lines());
 
-        let total_trees: i64 = slopes.iter().map(|slope| i64::try_from(forest.trees_along(*slope)).unwrap()).product();
+        let total_trees: i64 = slopes.iter().map(|slope| {
+            let encounters = forest.trees_along(*slope);
+            // Have to up-convert to i64 since multiplying tree counts causes
+            // integer overflow for i32.
+            i64::try_from(encounters).unwrap()
+        }).product();
 
         println!("trees: {}", total_trees);
     }

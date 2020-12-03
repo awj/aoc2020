@@ -13,6 +13,9 @@ impl Forest {
     }
 
     pub fn parse(input: std::str::Lines) -> Forest {
+        // Honestly kind of annoying having to do this to collect height/width.
+        // `std::str::Lines` is (among other things) an Iterator, so we can't
+        // `.count()` it without consuming it.
         let mut height: i32 = 0;
         let mut width: i32 = 0;
 
@@ -50,10 +53,15 @@ impl Forest {
             return false
         }
 
+        // Borrow here allows the next line to reference the inner Vec, since
+        // otherwise we'd have to copy it. `self.map[y as usize][x as usize]`
+        // automatically infers borrowing, but also makes debugging confusing if
+        // we exceed vector bounds.
         let row = &self.map[y as usize];
         row[x as usize]
     }
 
+    // Add slope to position, accounting for horizontal map wrapping.
     fn add(&self, pos: (i32, i32), slope: (i32, i32)) -> (i32, i32) {
         let (x, y) = pos;
         let (dx, dy) = slope;
