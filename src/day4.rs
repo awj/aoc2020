@@ -1,4 +1,7 @@
 #[derive(Default, Debug)]
+/// A record of validation of a passport. Since passports are split across input
+/// lines you likely will need this to be mutable so you can toggle flags as you
+/// come across them.
 struct PassportValidation {
     byr: bool,
     iyr: bool,
@@ -110,7 +113,7 @@ pub fn valid_passports(input: Vec<& str>) -> i32 {
     // for each line of input
     for line in input {
         // If the line is empty, that's the end of the passport so flag it and
-        // reset the validation
+        // reset the validation to start the next passport
         if line.is_empty() {
             if current_validation.is_valid() {
                 num_valid += 1;
