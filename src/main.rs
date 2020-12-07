@@ -15,8 +15,9 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        let sizes: Vec<usize> = day6::get_sizes(&mut contents.lines());
+        let sizes: Vec<usize> = day6::all_yes(&mut contents.lines());
         let sum: usize = sizes.iter().sum();
+
         println!("sum: {}", sum)
     }
 }
