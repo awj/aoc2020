@@ -6,6 +6,7 @@ pub struct Bag<'a> {
     can_contain: Option<HashMap<&'a str, u32>>
 }
 
+// This is ugly and disgusting code right here, but it does get the job done.
 pub fn parse_line(input: &str) -> Bag {
     let parts:Vec<&str> = input.split(" bags contain ").collect();
     if parts[1] == "no other bags." {
@@ -39,13 +40,17 @@ pub fn containments<'a>(bags: &'a Vec<Bag>) -> Containment<'a> {
     for bag in bags {
         if let Some(containees) = &bag.can_contain {
             for containee in containees.keys() {
-                if let Some(set) = hash.get_mut(containee) {
-                    set.insert(bag.description);
-                } else {
-                    let mut set = HashSet::new();
-                    set.insert(bag.description);
-                    hash.insert(containee, set);
-                }
+                let entry = hash.entry(containee).or_insert(HashSet::new());
+                entry.insert(bag.description);
+                // Leaving this here to show how much nicer the .entry()-based version is.
+
+                // if let Some(set) = hash.get_mut(containee) {
+                //     set.insert(bag.description);
+                // } else {
+                //     let mut set = HashSet::new();
+                //     set.insert(bag.description);
+                //     hash.insert(containee, set);
+                // }
             }
         }
     }
@@ -85,6 +90,16 @@ pub fn all_containments<'a>(target: &'a str, containments: &'a Containment<'a>) 
     result
 }
 
+// I spent *ages* trying to puzzle through why the compiler was upset about
+// multiple borrows of `acc` here. That's because I had just one lifetime
+// parameter ('a) for *everything*, so `acc` was being forced to have the same
+// lifetime as the target/containments that were passed in from *outside* of the
+// module code.
+//
+// That made all of the reuse of `acc` here a problem, since the borrow checker
+// possibly believed that I could be referencing it within that lifetime?
+//
+// Either way, adding the 'b lifetime cleared things up.
 pub fn deep_containments<'a, 'b>(target: &'a str, containments: &'a Containment<'a>, acc: &'b mut HashSet<&'a str>) {
     if let Some(containers) = containments.get(target) {
         for container in containers {
