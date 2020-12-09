@@ -1,4 +1,3 @@
-extern crate nom;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]

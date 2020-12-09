@@ -22,10 +22,10 @@ fn main() {
 
     if let Ok(contents) = fs::read_to_string(file) {
         let bags = contents.lines().map(day7::parse_line).collect();
-        let containments = day7::containments(&bags);
+        let hash = day7::bags_hash(&bags);
 
-        let result = day7::all_containments("shiny gold", &containments);
+        let result = day7::count_containees("shiny gold", &hash);
 
-        println!("{:?}", result.len());
+        println!("{:?}", result);
     }
 }
