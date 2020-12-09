@@ -41,7 +41,8 @@ pub fn all_yes<'a>(input: &'a mut std::str::Lines) -> Vec<usize> {
                 fresh_group = false;
             } else {
                 // Kinda weird that there's no reduce-to-intersection method for
-                // a HashSet. Instead we end up having to allocate new sets
+                // a HashSet. Instead we end up having to allocate new sets over
+                // and over.
                 answers = answers.intersection(&line_answers).map(|c| c.clone() ).collect();
             }
         }
