@@ -6,7 +6,8 @@ use core::str::SplitTerminator;
 // mod day4;
 // mod day5;
 // mod day6;
-mod day7;
+// mod day7;
+mod day8;
 
 use std::env;
 use std::fs;
@@ -21,11 +22,12 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        let bags = contents.lines().map(day7::parse_line).collect();
-        let hash = day7::bags_hash(&bags);
+        let instructions = contents.lines().map(|l| { println!("{}", l); day8::Instruction::parse(l) }).collect();
 
-        let result = day7::count_containees("shiny gold", &hash);
+        let mut machine = day8::Machine::new(&instructions);
 
-        println!("{:?}", result);
+        machine.run();
+
+        println!("acc: {}", machine.acc);
     }
 }
