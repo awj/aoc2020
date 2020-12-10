@@ -22,12 +22,19 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        let instructions = contents.lines().map(|l| { println!("{}", l); day8::Instruction::parse(l) }).collect();
+        let instructions: Vec<day8::Instruction> = contents.lines().map(|l| { println!("{}", l); day8::Instruction::parse(l) }).collect();
 
-        let mut machine = day8::Machine::new(&instructions);
+        for (i, inst) in instructions.iter().enumerate() {
+            let mut machine = day8::Machine::with_flip(&instructions, i as i32);
 
-        machine.run();
-
-        println!("acc: {}", machine.acc);
+            match machine.run() {
+                day8::ExecutionResult::Terminate => {
+                    println!("succeeded by flipping: {}, {:?}", i, inst);
+                    println!("acc: {}", machine.acc);
+                    break
+                },
+                _ => ()
+            }
+        }
     }
 }
