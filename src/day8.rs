@@ -24,6 +24,19 @@ impl<'a> Machine<'a> {
         }
     }
 
+    // Honestly kind of unhappy to solve this by just running the machine
+    // flipping instructions until it works.
+    //
+    // In theory we should have been able to:
+    // * Run it with no flipping and keep ahold of the executed set
+    // * Walk through each instruction and come up with the instructions that
+    //   point to it
+    // * Use the "points-to-here" info to run execution *backwards* until we
+    //   find an instruction we executed the first time. Flipping that
+    //   instruction should give us a correctly working program.
+    //
+    // However, simply running these in a loop until one works takes all of 0.2s
+    // in debug builds and that's hard to argue.
     pub fn with_flip(instructions: &'a Vec<Instruction>, flip: i32) -> Machine<'a> {
         Machine {
             acc: 0,
