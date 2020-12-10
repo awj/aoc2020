@@ -7,7 +7,7 @@ use core::str::SplitTerminator;
 // mod day5;
 // mod day6;
 // mod day7;
-mod day8;
+// mod day8;
 mod day9;
 
 use std::env;
@@ -28,7 +28,13 @@ fn main() {
         let size = &args[2].parse::<usize>().unwrap();
 
         match day9::first_non_sum(&nums, *size) {
-            Some(num) => println!("found: {}", num),
+            Some(num) => {
+                println!("found weakness: {}", num);
+                match day9::numbers_adding_to(&nums, num) {
+                    Some((start,end)) => println!("found nums: {:?}, {:?}, sum: {:?}", start, end, start + end),
+                    None => println!("no dice!")
+                }
+            }
             None => println!("none found!")
         }
     }
