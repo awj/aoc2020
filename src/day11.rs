@@ -30,7 +30,68 @@ impl Seat {
         match self {
             Seat::Floor => false,
             Seat::Empty => nearby == 0,
-            Seat::Occupied => nearby >= 4
+            // Star 1
+            // Seat::Occupied => nearby >= 4
+            Seat::Occupied => nearby >= 5
+        }
+    }
+}
+
+enum Direction {
+    North,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest
+}
+
+// Annoyingly, this is easier than just "adding a negative value" to a `usize`.
+// Extra-annoyingly, it immediately came in handy for the "are we heading off
+// the board" checks.
+impl Direction {
+    pub fn step(&self, location: (usize, usize)) -> (usize, usize) {
+        let (x, y) = location;
+
+        match self {
+            Direction::North     => (x, y - 1),
+            Direction::NorthEast => (x + 1, y - 1),
+            Direction::East      => (x + 1 , y),
+            Direction::SouthEast => (x + 1, y + 1),
+            Direction::South     => (x , y + 1),
+            Direction::SouthWest => (x - 1, y + 1),
+            Direction::West      => (x - 1, y),
+            Direction::NorthWest => (x - 1, y - 1)
+        }
+    }
+
+    pub fn north(&self) -> bool {
+        match self {
+            Direction::North | Direction::NorthWest | Direction::NorthEast => true,
+            _ => false
+        }
+    }
+
+    pub fn south(&self) -> bool {
+        match self {
+            Direction::South | Direction::SouthWest | Direction::SouthEast => true,
+            _ => false
+        }
+    }
+
+    pub fn east(&self) -> bool {
+        match self {
+            Direction::East | Direction::NorthEast | Direction::SouthEast => true,
+            _ => false
+        }
+    }
+
+    pub fn west(&self) -> bool {
+        match self {
+            Direction::West | Direction::NorthWest | Direction::SouthWest => true,
+            _ => false
         }
     }
 }
@@ -93,6 +154,49 @@ impl Layout {
         }
     }
 
+    pub fn on_board(&self, location: (usize, usize)) -> bool {
+        let (x, y) = location;
+
+        x >= 0 && x <= self.col_size && y >= 0 && y <= self.row_size
+    }
+
+    pub fn occupant_along(&self, location: (usize, usize), dir: Direction) -> bool {
+        let (mut nx, mut ny) = location;
+
+        loop {
+            // check if we've hit the edge and plan to go past
+            if (nx == 0 && dir.west()) ||
+                (nx == self.col_size && dir.east()) ||
+                (ny == 0 && dir.north()) ||
+                (ny == self.row_size && dir.south()) { break }
+
+            let loc = dir.step( (nx, ny) );
+
+            if self[loc] == Seat::Occupied { return true }
+            if self[loc] == Seat::Empty { return false }
+
+            nx = loc.0;
+            ny = loc.1;
+        }
+
+        false
+    }
+
+    pub fn visible_occupants(&self, location: (usize, usize)) -> usize {
+        let mut count = 0;
+
+        if self.occupant_along(location, Direction::North) { count += 1 }
+        if self.occupant_along(location, Direction::NorthEast) { count += 1 }
+        if self.occupant_along(location, Direction::East) { count += 1 }
+        if self.occupant_along(location, Direction::SouthEast) { count += 1 }
+        if self.occupant_along(location, Direction::South) { count += 1 }
+        if self.occupant_along(location, Direction::SouthWest) { count += 1 }
+        if self.occupant_along(location, Direction::West) { count += 1 }
+        if self.occupant_along(location, Direction::NorthWest) { count += 1 }
+
+        count
+    }
+
     pub fn occupants_around(&self, location: (usize, usize)) -> usize {
         let mut count = 0;
         let (x, y) = location;
@@ -121,7 +225,9 @@ impl Layout {
 
         for (x, row) in self.seats.iter().enumerate() {
             for (y, seat) in row.iter().enumerate() {
-                let nearby = self.occupants_around((x, y));
+                // Star 1
+                // let nearby = self.occupants_around((x, y));
+                let nearby = self.visible_occupants((x, y));
                 if seat.should_change(nearby) {
                     changes.insert((x,y), seat.change());
                 }
