@@ -8,7 +8,8 @@ use core::str::SplitTerminator;
 // mod day6;
 // mod day7;
 // mod day8;
-mod day9;
+// mod day9;
+mod day10;
 
 use std::env;
 use std::fs;
@@ -23,19 +24,10 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        let nums = contents.lines().map(|l| l.parse::<i64>().unwrap()).collect();
+        let mut joltages: Vec<i32> = day10::optimal_config(&contents);
 
-        let size = &args[2].parse::<usize>().unwrap();
+        println!("checking: {:?}", joltages);
 
-        match day9::first_non_sum(&nums, *size) {
-            Some(num) => {
-                println!("found weakness: {}", num);
-                match day9::numbers_adding_to(&nums, num) {
-                    Some((start,end)) => println!("found nums: {:?}, {:?}, sum: {:?}", start, end, start + end),
-                    None => println!("no dice!")
-                }
-            }
-            None => println!("none found!")
-        }
+        println!("configs: {:?}", day10::possible_configs(&joltages));
     }
 }
