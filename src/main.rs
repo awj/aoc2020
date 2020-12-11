@@ -9,7 +9,8 @@ use core::str::SplitTerminator;
 // mod day7;
 // mod day8;
 // mod day9;
-mod day10;
+// mod day10;
+mod day11;
 
 use std::env;
 use std::fs;
@@ -24,10 +25,23 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        let mut joltages: Vec<i32> = day10::optimal_config(&contents);
+        if let Some(mut layout) = day11::Layout::parse(&contents) {
+            println!("checking layout: {} x {}", layout.row_size, layout.col_size);
 
-        println!("checking: {:?}", joltages);
+            let mut iterations = 0;
 
-        println!("configs: {:?}", day10::possible_configs(&joltages));
+            loop {
+                iterations += 1;
+                let changes = layout.step();
+
+                println!("iteration: {}, changes: {}", iterations, changes);
+
+                if changes == 0 { break }
+            }
+
+            println!("after {} iterations, final occupancy: {}", iterations, layout.num_occupied())
+        } else {
+            println!("could not parse layout")
+        }
     }
 }
