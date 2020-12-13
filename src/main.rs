@@ -10,7 +10,8 @@ use core::str::SplitTerminator;
 // mod day8;
 // mod day9;
 // mod day10;
-mod day11;
+// mod day11;
+mod day12;
 
 use std::env;
 use std::fs;
@@ -25,23 +26,8 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        if let Some(mut layout) = day11::Layout::parse(&contents) {
-            println!("checking layout: {} x {}", layout.row_size, layout.col_size);
+        let boat = day12::Boat::simulate(&contents);
 
-            let mut iterations = 0;
-
-            loop {
-                iterations += 1;
-                let changes = layout.step();
-
-                println!("iteration: {}, changes: {}", iterations, changes);
-
-                if changes == 0 { break }
-            }
-
-            println!("after {} iterations, final occupancy: {}", iterations, layout.num_occupied())
-        } else {
-            println!("could not parse layout")
-        }
+        println!("boat: {:?}, travelled: {}", boat, boat.distance_travelled())
     }
 }
