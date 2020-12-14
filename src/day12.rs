@@ -2,6 +2,8 @@ use std::convert::TryInto;
 use std::str::FromStr;
 use std::num::ParseIntError;
 
+use std::ops::{AddAssign, Mul};
+
 #[derive(Debug)]
 enum Instruction {
     North(u32),
@@ -41,54 +43,30 @@ enum Direction {
     West
 }
 
-impl Direction {
-    fn flip(&self) -> Direction {
-        match self {
-            Direction::North => Direction::South,
-            Direction::South => Direction::North,
-            Direction::East => Direction::West,
-            Direction::West => Direction::East,
-        }
-    }
+#[derive(Clone, Copy, Debug)]
+pub struct Location {
+    x: i32,
+    y: i32
+}
 
-    fn change(&self, turn: &Turn, amount: u32) -> Direction {
-        match (self, turn, amount) {
-            // all 180 degree turns are a flip
-            (_, _, 180) => self.flip(),
+impl Mul<u32> for Location {
+    type Output = Self;
 
-            (Direction::North, Turn::Right, 90) => Direction::East,
-            (Direction::North, Turn::Right, 270) => Direction::West,
-
-            (Direction::North, Turn::Left, 90) => Direction::West,
-            (Direction::North, Turn::Left, 270) => Direction::East,
-
-            (Direction::South, Turn::Right, 90) => Direction::West,
-            (Direction::South, Turn::Right, 270) => Direction::East,
-
-            (Direction::South, Turn::Left, 90) => Direction::East,
-            (Direction::South, Turn::Left, 270) => Direction::West,
-
-            (Direction::East, Turn::Right, 90) => Direction::South,
-            (Direction::East, Turn::Right, 270) => Direction::North,
-
-            (Direction::East, Turn::Left, 90) => Direction::North,
-            (Direction::East, Turn::Left, 270) => Direction::South,
-
-            (Direction::West, Turn::Right, 90) => Direction::North,
-            (Direction::West, Turn::Right, 270) => Direction::South,
-
-            (Direction::West, Turn::Left, 90) => Direction::South,
-            (Direction::West, Turn::Left, 270) => Direction::North,
-
-            (_, _, _) => panic!("unexpected args: {:?}, {:?}, {:?}", self, turn, amount),
+    fn mul(self, rhs: u32) -> Self::Output {
+        Self {
+            x: self.x * (rhs as i32),
+            y: self.y * (rhs as i32)
         }
     }
 }
 
-#[derive(Debug)]
-pub struct Location {
-    x: i32,
-    y: i32
+impl AddAssign<Location> for Location {
+    fn add_assign(&mut self, other: Self) {
+        *self = Self {
+            x: self.x + other.x,
+            y: self.y + other.y
+        };
+    }
 }
 
 impl Location {
@@ -98,19 +76,41 @@ impl Location {
     pub fn manhattan(&self) -> u32 {
         (self.x.abs() + self.y.abs()).try_into().unwrap()
     }
+
+    // Return a location that is this location rotated about the origin. (only
+    // supports 90 degree increments)
+    pub fn rotate(&self, turn: &Turn, degrees: u32) -> Location {
+        let (sin, cos) = match (turn, degrees) {
+            (Turn::Left, 90) => (1, 0),
+            (Turn::Left, 180) => (0, -1),
+            (Turn::Left, 270) => (-1, 0),
+            (Turn::Right, 90) => (-1, 0),
+            (Turn::Right, 180) => (0, -1),
+            (Turn::Right, 270) => (1, 0),
+            (_,_) => panic!("unknown rotation: {:?}, {}", turn, degrees)
+        };
+
+        // general formula for rotation about origin
+        // new_x = x * cos(a) - y * sin(a)
+        // new_y = x * sin(a) + y * cos(a)
+        Location {
+            x: self.x * cos - self.y * sin,
+            y: self.x * sin + self.y * cos
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct Boat {
     loc: Location,
-    dir: Direction
+    way: Location
 }
 
 impl Boat {
     fn new() -> Boat {
         Boat {
             loc: Location::origin(),
-            dir: Direction::East
+            way: Location { x: 10, y: 1 }
         }
     }
 
@@ -132,20 +132,15 @@ impl Boat {
         self.loc.manhattan()
     }
 
-    fn move_north(&mut self, amount: u32) { self.loc.y += amount as i32; }
-    fn move_south(&mut self, amount: u32) { self.loc.y -= amount as i32; }
-    fn move_west(&mut self, amount: u32) { self.loc.x -= amount as i32; }
-    fn move_east(&mut self, amount: u32) { self.loc.x += amount as i32; }
+    fn move_north(&mut self, amount: u32) { self.way.y += amount as i32; }
+    fn move_south(&mut self, amount: u32) { self.way.y -= amount as i32; }
+    fn move_west(&mut self, amount: u32) { self.way.x -= amount as i32; }
+    fn move_east(&mut self, amount: u32) { self.way.x += amount as i32; }
 
     fn perform(&mut self, inst: Instruction) {
         match inst {
             Instruction::Forward(amount) => {
-                match self.dir {
-                    Direction::North => self.move_north(amount),
-                    Direction::South => self.move_south(amount),
-                    Direction::East => self.move_east(amount),
-                    Direction::West => self.move_west(amount)
-                }
+                self.loc += self.way * amount
             },
 
             Instruction::North(amount) => {
@@ -165,11 +160,11 @@ impl Boat {
             },
 
             Instruction::Right(amount) => {
-                self.dir = self.dir.change(&Turn::Right, amount)
+                self.way = self.way.rotate(&Turn::Right, amount)
             },
 
             Instruction::Left(amount) => {
-                self.dir = self.dir.change(&Turn::Left, amount)
+                self.way = self.way.rotate(&Turn::Left, amount)
             },
         }
     }
