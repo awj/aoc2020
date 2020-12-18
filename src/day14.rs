@@ -1,10 +1,11 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use core::num::ParseIntError;
+use std::convert::TryFrom;
 
 #[derive(Debug)]
 pub struct Mem {
-    set_bits: u64,
-    unset_bits: u64,
+    set_bits: usize,
+    floating_bits: HashSet<usize>,
     memory: HashMap<usize, u64>
 }
 
@@ -12,38 +13,53 @@ impl Mem {
     pub fn new() -> Mem {
         Mem {
             set_bits: 0,
-            unset_bits: 0,
+            floating_bits: HashSet::new(),
             memory: HashMap::new()
         }
     }
 
     pub fn set_mask(&mut self, input: &str) {
         let mut set_bits = 0;
-        let mut unset_bits = 0;
+        self.floating_bits.clear();
 
         for (i, char) in input.chars().rev().enumerate() {
             match char {
-                '0' => { unset_bits |= 2_u64.pow(i as u32) },
-                '1' => { set_bits |= 2_u64.pow(i as u32) },
+                '0' => (),
+                '1' => { set_bits |= 2_usize.pow(i as u32); },
+                'X' => { self.floating_bits.insert(2_usize.pow(i as u32)); }
                 _ => ()
             }
         }
 
         self.set_bits = set_bits;
-        self.unset_bits = unset_bits;
     }
 
-    pub fn set(&mut self, location: usize, value: u64) -> u64 {
-        let mut current = value.clone();
+    pub fn set(&mut self, location: usize, value: u64) {
+        let mut locations: Vec<usize> = vec![location | self.set_bits];
 
-        current = current | self.set_bits;
-        current = current & !self.unset_bits;
+        println!("floating bits: {:?}", self.floating_bits);
+        println!("initial location: {:?}", locations[0]);
+        for bit in self.floating_bits.iter() {
+            println!("bit mask: {}", bit);
+            // Get *current* size of the vector
+            let size = locations.len();
+            println!("locations {:?}", locations);
 
-        println!("setting: {}, {} (from {})", location, current, value);
+            for i in 0..size {
+                let loc = locations[i];
 
-        self.memory.insert(location, current.clone());
+                // Update the location with the variation that includes the zero bit
+                locations[i] = loc & !bit;
+                // push the variation that includes the one bit
+                locations.push(loc | bit);
+            }
+        }
 
-        current
+
+        println!("writing to locations {:?}", locations);
+        for loc in locations {
+            self.memory.insert(loc, value);
+        }
     }
 
     pub fn sum(&self) -> u64 {
