@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::convert::TryFrom;
 
 type Memnum = u32;
@@ -6,23 +6,15 @@ type Memnum = u32;
 #[derive(Debug)]
 pub struct MemoryGame {
     latest: Memnum,
-    spoken: HashSet<Memnum>,
-    history: Vec<Memnum>,
+    history: HashMap<Memnum, usize>,
     turn: usize
 }
 
 impl MemoryGame {
     pub fn next_num(&self) -> Memnum {
-        if self.spoken.contains(&self.latest) {
-
-            for(i,v) in self.history.iter().enumerate().rev() {
-                if *v == self.latest {
-                    return u32::try_from((self.turn - 1) - (i + 1)).unwrap();
-                }
-            }
-            panic!("should not be here!");
-        } else {
-            0
+        match self.history.get(&self.latest) {
+            Some(prev) => { Memnum::try_from(self.turn - prev).unwrap() },
+            None => 0
         }
     }
 
@@ -31,7 +23,9 @@ impl MemoryGame {
         while self.turn <= count {
             num = self.next_num();
 
-            println!("turn: {}, num: {}", self.turn, num);
+            if self.turn % 10 == 0 {
+                println!("turn: {}, num: {}", self.turn, num);
+            }
             self.said(num);
         }
 
@@ -39,8 +33,7 @@ impl MemoryGame {
     }
 
     pub fn said(&mut self, num: Memnum) {
-        self.spoken.insert(self.latest);
-        self.history.push(self.latest);
+        self.history.insert(self.latest, self.turn);
         self.latest = num;
         self.turn += 1;
     }
@@ -56,8 +49,7 @@ impl MemoryGame {
     pub fn new(initial: &str) -> MemoryGame {
         let mut game = MemoryGame {
             latest: 0,
-            spoken: HashSet::new(),
-            history: Vec::new(),
+            history: HashMap::new(),
             turn: 1
         };
 
