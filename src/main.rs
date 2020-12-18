@@ -13,7 +13,7 @@ use core::str::SplitTerminator;
 // mod day11;
 // mod day12;
 // mod day13;
-mod day14;
+mod day15;
 
 use std::env;
 use std::fs;
@@ -27,7 +27,11 @@ fn main() {
 
     let file = &args[1];
 
+    let rounds = args[2].parse::<usize>().unwrap();
+
     if let Ok(contents) = fs::read_to_string(file) {
-        println!("{:?}", day14::execute(&contents));
+        let mut game = day15::MemoryGame::new(contents.trim());
+
+        println!("{}th number: {}", rounds, game.nth_spoken(rounds));
     }
 }
