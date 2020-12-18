@@ -11,7 +11,8 @@ use core::str::SplitTerminator;
 // mod day9;
 // mod day10;
 // mod day11;
-mod day12;
+// mod day12;
+mod day13;
 
 use std::env;
 use std::fs;
@@ -26,8 +27,9 @@ fn main() {
     let file = &args[1];
 
     if let Ok(contents) = fs::read_to_string(file) {
-        let boat = day12::Boat::simulate(&contents);
+        let (target, busses) = day13::parse(&contents);
+        let (closest, wait) = day13::soonest_stop(target, &busses);
 
-        println!("boat: {:?}, travelled: {}", boat, boat.distance_travelled())
+        println!("bus: {}, wait: {}, check: {}", closest, wait, closest * wait)
     }
 }
